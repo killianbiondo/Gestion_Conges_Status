@@ -1,0 +1,71 @@
+{# templates/stats/user_stats.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques des congés par utilisateur{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Statistiques des congés par utilisateur (DQL)</h1>
+
+    {% if congesParUser is not empty %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Nombre de congés</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for conge in congesParUser %}
+                    <tr>
+                        <td>{{ conge.nom }}</td>
+                        <td>{{ conge.prenom }}</td>
+                        <td>{{ conge.count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="text-center mt-3">
+            <small>Temps d'exécution de la requête DQL : {{ executionTimeDQL }}</small>
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            Aucun congé trouvé.
+        </div>
+    {% endif %}
+</div>
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Statistiques des congés par utilisateur (SQL)</h1>
+
+    {% if congesParUserSQL is not empty %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Nombre de congés</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for conge in congesParUserSQL %}
+                    <tr>
+                        <td>{{ conge.nom }}</td>
+                        <td>{{ conge.prenom }}</td>
+                        <td>{{ conge.count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="text-center mt-3">
+            <small>Temps d'exécution de la requête SQL : {{ executionTimeSQL }}</small>
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            Aucun congé trouvé.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

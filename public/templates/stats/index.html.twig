@@ -1,0 +1,62 @@
+{# templates/stats/index.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques des congés{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Statistiques des congés</h1>
+
+    <h2>Total des congés</h2>
+    <p>{{ totalConges }}</p>
+
+    <h2>Congés par type (DQL)</h2>
+    {% if congesParType is not empty %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Nombre de congés</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for conge in congesParType %}
+                    <tr>
+                        <td>{{ conge.type }}</td>
+                        <td>{{ conge.count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            Aucun congé trouvé.
+        </div>
+    {% endif %}
+
+    <h2>Congés par type (SQL)</h2>
+    {% if congesParTypeSQL is not empty %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Nombre de congés</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for conge in congesParTypeSQL %}
+                    <tr>
+                        <td>{{ conge.type }}</td>
+                        <td>{{ conge.count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            Aucun congé trouvé.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

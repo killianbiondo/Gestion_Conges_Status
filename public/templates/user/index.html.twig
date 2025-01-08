@@ -1,0 +1,28 @@
+{# templates/user/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Afficher les utilisateurs{% endblock %}
+
+{% block body %}
+<h1>Liste des utilisateurs</h1>
+
+<ul>
+    {% for user in users %}
+        <li>{{ user.nom }}</li>
+        <li>{{ user.prenom }}</li>
+            {% if user.groupes is not empty %}
+                <ul>
+                    {% for groupe in user.groupes %}
+                        <li>{{ groupe.nom }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                    Aucun groupe
+            {% endif %}
+        <a href="{{ path('user_show_conge', {'email': user.email}) }}" class="btn btn-primary">Voir les congés</a>
+    {% else %}
+        <li>Aucun utilisateur trouvé.</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

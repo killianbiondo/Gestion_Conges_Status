@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des congés{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Liste des congés</h1>
+
+    {% if userConges is not empty %}
+        <div class="card mb-3">
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for conge in userConges %}
+                        <li class="list-group-item">
+                            <strong>Utilisateur:</strong> {{ conge.user.nom }} {{ conge.user.prenom }}<br>
+                            <strong>Type:</strong> {{ conge.type }}<br>
+                            <strong>Date de début:</strong> {{ conge.dateDebut|date('d/m/Y') }}<br>
+                            <strong>Date de fin:</strong> {{ conge.dateFin|date('d/m/Y') }}<br>
+                            <strong>Statut:</strong> {{ conge.statut }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            Aucun congé trouvé.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

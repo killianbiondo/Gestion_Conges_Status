@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des types de congés{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Liste des types congés</h1>
+
+    {% if congesTypes is not empty %}
+        <div class="card mb-3">
+            <div class="card-body p-0">
+                <h2 class="card-header">Nombre de type de congés different</h2>
+                <ul class="list-group list-group-flush">
+                    {% for congeType in congesTypes %}
+                        <li>
+                            <strong>Type:</strong> {{ congeType.type }}<br>
+                            <strong>Nombre de congés:</strong> {{ congeType.count }}<br>
+                            <a href="{{ path('conge_show_cate_type', {'type': congeType.type}) }}" class="btn btn-primary">Voir les congés</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            Aucun congé trouvé.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
