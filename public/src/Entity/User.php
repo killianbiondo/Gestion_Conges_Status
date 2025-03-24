@@ -6,10 +6,15 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
-class User
+#[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -22,7 +27,7 @@ class User
     #[ORM\Column(length: 255)]
     private ?string $prenom = null;
 
-       #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)] // Ajout de unique pour éviter les doublons d'email
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
@@ -30,6 +35,9 @@ class User
 
     #[ORM\ManyToMany(targetEntity: Groupe::class, mappedBy: 'user')]
     private Collection $groupes;
+
+    #[ORM\Column(type: 'boolean')]
+    private $isVerified = false;
 
     public function __construct()
     {
@@ -64,7 +72,6 @@ class User
 
         return $this;
     }
-
 
     public function getEmail(): ?string
     {
@@ -113,6 +120,35 @@ class User
         if ($this->groupes->removeElement($groupe)) {
             $groupe->removeUser($this);
         }
+
+        return $this;
+    }
+
+    // Implémentation de UserInterface
+    public function getRoles(): array
+    {
+        // Les rôles doivent toujours contenir au moins "ROLE_USER"
+        return ['ROLE_USER'];
+    }
+
+    public function eraseCredentials()
+    {
+        // Si vous stockez des données sensibles temporaires dans l'utilisateur, nettoyez-les ici
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email; // Utilisez l'email comme identifiant unique
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
 
         return $this;
     }
