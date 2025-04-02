@@ -52,4 +52,14 @@ class CongeController extends AbstractController
             'userConges' => $userConges,
         ]);
     }
+
+    #[Route('/conge/create}', name: 'conge_create')]
+    public function congeCreate(): Response
+    {
+
+    }
+
+
+
+
 }
