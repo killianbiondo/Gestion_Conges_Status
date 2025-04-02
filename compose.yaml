@@ -38,11 +38,12 @@ services:
     volumes:
       - ./public:/var/www/html
     environment:
-      - APP_SECRET=${APP_SECRET}
-      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
-      - MARIADB_DATABASE=${MARIADB_DATABASE}
-      - MARIADB_USER=${MARIADB_USER}
-      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+      APP_SECRET: ${APP_SECRET}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      DATABASE_URL: ${DATABASE_URL}
     networks:
       - app_network
 
@@ -52,7 +53,7 @@ services:
     restart: always
     environment:
       PMA_HOST: mariadb
-      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}  # Root password of MariaDB
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}  # Root password of MariaDB
     ports:
       - "8080:80"
     depends_on:
