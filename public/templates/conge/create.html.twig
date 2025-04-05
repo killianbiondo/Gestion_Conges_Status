@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un congé{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h1 class="h3 mb-0">Créer un nouveau congé</h1>
+            </div>
+            <div class="card-body">
+                {{ form_start(form, {'attr': {'class': 'needs-validation'}}) }}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form_label(form.user) }}
+                            {{ form_widget(form.user, {'attr': {'class': 'form-control'}}) }}
+                            {{ form_errors(form.user) }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form_label(form.type) }}
+                            {{ form_widget(form.type, {'attr': {'class': 'form-control'}}) }}
+                            {{ form_errors(form.type) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form_label(form.date_debut) }}
+                            {{ form_widget(form.date_debut, {'attr': {'class': 'form-control'}}) }}
+                            {{ form_errors(form.date_debut) }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form_label(form.date_fin) }}
+                            {{ form_widget(form.date_fin, {'attr': {'class': 'form-control'}}) }}
+                            {{ form_errors(form.date_fin) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <a href="{{ path('conge') }}" class="btn btn-secondary">Annuler</a>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
