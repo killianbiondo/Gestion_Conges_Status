@@ -94,4 +94,12 @@ class Conge
 
         return $this;
     }
+
+    public function getStatus()
+    {
+    }
+
+    public function setUpdatedAt(\DateTimeImmutable $param)
+    {
+    }
 }

@@ -46,6 +46,7 @@ class CongeType extends AbstractType
                 'label' => 'Date de fin',
                 'required' => true,
             ]);
+
     }
 
     public function configureOptions(OptionsResolver $resolver): void

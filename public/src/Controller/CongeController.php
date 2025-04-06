@@ -10,6 +10,7 @@ use App\Repository\CongeRepository;
 use App\Entity\Conge;
 use App\Form\CongeType;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class CongeController extends AbstractController
 {
@@ -59,7 +60,7 @@ class CongeController extends AbstractController
     }
 
     #[Route('/conge/create', name: 'conge_create')]
-    public function create(Request $request): Response
+    public function create(Request $request): Response // fonction pour créer un congé
     {
         $conge = new Conge();
         $form = $this->createForm(CongeType::class, $conge);
@@ -78,6 +79,39 @@ class CongeController extends AbstractController
 
         return $this->render('conge/create.html.twig', [
             'form' => $form->createView(),
+        ]);
+    }
+
+    #[Route('/conge/edit/{id}', name: 'app_conge_edit')]
+    public function edit(Request $request, Conge $conge, EntityManagerInterface $entityManager): Response
+    {
+        // Vérifier que l'utilisateur connecté est bien le propriétaire de la demande
+        if ($conge->getUser() !== $this->getUser()) {
+            throw new AccessDeniedException('Vous ne pouvez pas modifier cette demande de congé.');
+        }
+
+        // Vérifier si le statut permet la modification (par exemple, si le congé n'est pas déjà validé ou refusé)
+        if ($conge->getStatus() !== 'En attente') {
+            $this->addFlash('error', 'Vous ne pouvez pas modifier une demande de congé déjà traitée.');
+            return $this->redirectToRoute('app_user_dashboard');
+        }
+
+        $form = $this->createForm(CongeType::class, $conge);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Mettre à jour la date de modification
+            $conge->setUpdatedAt(new \DateTimeImmutable());
+
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Votre demande de congé a été modifiée avec succès.');
+            return $this->redirectToRoute('app_user_dashboard');
+        }
+
+        return $this->render('conge/edit.html.twig', [
+            'form' => $form->createView(),
+            'conge' => $conge,
         ]);
     }
 }
