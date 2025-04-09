@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use App\Repository\CongeRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -79,5 +80,75 @@ class StatsController extends AbstractController
             'congesParUserSQL' => $congesParUserSQL,
             'executionTimeSQL' => $executionTimeSQL . " ms",
         ]);
+    }
+
+    #[Route('/stats/team-calendar', name: 'stats_team_calendar')]
+    public function teamCalendar(Request $request): Response
+    {
+        // Récupérer l'utilisateur connecté
+        $user = $this->getUser();
+
+        // Récupérer le mois et l'année (par défaut mois actuel)
+        $month = $request->query->getInt('month', (int)date('m'));
+        $year = $request->query->getInt('year', (int)date('Y'));
+
+        // Si l'utilisateur est un manager, il peut voir l'équipe entière
+        // Sinon, il ne verra que ses propres congés
+        if ($this->isGranted('ROLE_MANAGER')) {
+            // Si l'utilisateur est un manager, récupérer son équipe
+            $team = $this->userRepository->findByManager($user);
+        } else {
+            // Si l'utilisateur n'est pas un manager, récupérer uniquement ses congés
+            $team = [$user];
+        }
+
+        // Récupérer tous les congés pour l'équipe pour le mois donné
+        $firstDay = new \DateTime("$year-$month-01");
+        $lastDay = (clone $firstDay)->modify('last day of this month');
+
+        $teamLeaves = $this->congeRepository->findTeamLeavesByDateRange($team, $firstDay, $lastDay);
+
+        // Formater les données des congés pour le calendrier JavaScript
+        $formattedLeaves = [];
+        foreach ($teamLeaves as $conge) {
+            $formattedLeaves[] = [
+                'id' => $conge->getId(),
+                'title' => $conge->getUser()->getFullName(),
+                'start' => $conge->getDateDebut()->format('Y-m-d'),
+                'end' => $conge->getDateFin()->format('Y-m-d'),
+                'type' => $conge->getType(),
+                'backgroundColor' => $this->getColorForLeaveType($conge->getType()),
+                'borderColor' => $this->getColorForLeaveType($conge->getType()),
+                'textColor' => '#ffffff',
+                'extendedProps' => [
+                    'userName' => $conge->getUser()->getFullName(),
+                    'leaveType' => $conge->getType(),
+                    'status' => $conge->getStatut(),
+                    'comment' => $conge->getCommentaire()
+                ]
+            ];
+        }
+
+        // Préparer les données pour le template
+        $calendarData = json_encode($formattedLeaves);
+
+        return $this->render('stats/team_calendar.html.twig', [
+            'calendarData' => $calendarData,
+            'currentMonth' => $month,
+            'currentYear' => $year,
+        ]);
+    }
+
+    /**
+     * Retourne une couleur selon le type de congé
+     */
+    private function getColorForLeaveType(string $type): string
+    {
+        return match ($type) {
+            'CP' => '#28a745',    // Congé payé - vert
+            'CM' => '#dc3545',    // Congé maladie - rouge
+            'RTT' => '#6f42c1',   // RTT - violet
+            default => '#6c757d', // Défaut - gris
+        };
     }
 }
