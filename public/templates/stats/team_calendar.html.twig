@@ -1,4 +1,3 @@
-{# templates/stats/team_calendar.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Calendrier des congés - Équipe{% endblock %}
@@ -7,62 +6,73 @@
     {{ parent() }}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.2/main.min.css">
     <style>
-        #calendar {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
+             #calendar {
+                 max-width: 1200px;
+                 min-height: 700px;
+                 margin: 0 auto;
+                 padding: 20px;
+                 background-color: #ffffff;
+                 border-radius: 10px;
+                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+             }
 
-        .calendar-legend {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+            .container {
+                max-width: 1400px;
+            }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 0 10px;
-        }
+            .calendar-legend {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+            }
 
-        .color-box {
-            width: 15px;
-            height: 15px;
-            margin-right: 5px;
-            display: inline-block;
-        }
+            .legend-item {
+                display: flex;
+                align-items: center;
+                margin: 0 10px;
+            }
 
-        .fc-daygrid-event {
-            cursor: pointer;
-        }
+            .color-box {
+                width: 15px;
+                height: 15px;
+                margin-right: 5px;
+                display: inline-block;
+            }
 
-        .month-navigation {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+            .fc-daygrid-event {
+                cursor: pointer;
+            }
 
-        .tooltip-content {
-            padding: 10px;
-            max-width: 250px;
-        }
+            .month-navigation {
+                text-align: center;
+                margin-bottom: 20px;
+            }
 
-        .tooltip-content p {
-            margin: 5px 0;
-        }
-    </style>
-{% endblock %}
+            .tooltip-content {
+                padding: 10px;
+                max-width: 250px;
+            }
+
+            .tooltip-content p {
+                margin: 5px 0;
+            }
+        </style>
+    {% endblock %}
+
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.2/main.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.2/locales/fr.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tippy.js/6.3.1/tippy.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/locales/fr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.1/dist/tippy-bundle.umd.min.js"></script>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const calendarEl = document.getElementById('calendar');
-            const calendarData = {{ calendarData|raw }};  // Injection des données de congés
+            const calendarData = {{ calendarData|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
 
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
@@ -72,10 +82,9 @@
                     center: '',
                     right: 'prev,next today'
                 },
-                initialDate: '{{ currentYear }}-{{ currentMonth }}-01',
-                events: calendarData,  // Passer les événements (les congés)
+                initialDate: '{{ currentYear }}-{{ '%02d'|format(currentMonth) }}-01',
+                events: calendarData,
                 eventDidMount: function(info) {
-                    // Utiliser tippy.js pour afficher les infos au survol
                     tippy(info.el, {
                         content: createTooltipContent(info.event),
                         allowHTML: true,
@@ -88,7 +97,6 @@
 
             calendar.render();
 
-            // Navigation entre les mois
             document.getElementById('prevMonth').addEventListener('click', function() {
                 let month = {{ currentMonth }};
                 let year = {{ currentYear }};
@@ -115,45 +123,39 @@
                 window.location.href = '{{ path('stats_team_calendar') }}?month=' + month + '&year=' + year;
             });
 
-            // Fonction pour créer le contenu du tooltip
             function createTooltipContent(event) {
                 const props = event.extendedProps;
                 return `
                     <div class="tooltip-content">
-                        <p><strong>Employé:</strong> ${props.userName}</p>
-                        <p><strong>Type:</strong> ${getLeaveTypeName(props.leaveType)}</p>
+                        <p><strong>Employé:</strong> ${props.userName || 'N/A'}</p>
+                        <p><strong>Type:</strong> ${getLeaveTypeName(props.leaveType || 'Fermeture')}</p>
                         <p><strong>Période:</strong> ${formatDate(event.start)} - ${formatDate(event.end)}</p>
                         ${props.comment ? `<p><strong>Commentaire:</strong> ${props.comment}</p>` : ''}
-                        <p><strong>Statut:</strong> ${getStatusName(props.status)}</p>
+                        ${props.status ? `<p><strong>Statut:</strong> ${getStatusName(props.status)}</p>` : ''}
                     </div>
                 `;
             }
 
-            // Fonction pour formater les dates
             function formatDate(date) {
                 if (!date) return '';
                 return new Date(date).toLocaleDateString('fr-FR');
             }
 
-            // Fonction pour obtenir le nom du type de congé
             function getLeaveTypeName(type) {
                 const types = {
                     'CP': 'Congé payé',
                     'CM': 'Congé maladie',
                     'RTT': 'RTT'
                 };
-
                 return types[type] || type;
             }
 
-            // Fonction pour obtenir le nom du statut
             function getStatusName(status) {
                 const statuses = {
                     'PENDING': 'En attente',
                     'APPROVED': 'Approuvé',
                     'REJECTED': 'Refusé'
                 };
-
                 return statuses[status] || status;
             }
         });
@@ -176,11 +178,15 @@
             </div>
             <div class="legend-item">
                 <span class="color-box" style="background-color: #dc3545;"></span>
-                <span>Congé Maladie</span>
+                <span>Congé maladie</span>
             </div>
             <div class="legend-item">
                 <span class="color-box" style="background-color: #6f42c1;"></span>
                 <span>RTT</span>
+            </div>
+            <div class="legend-item">
+                <span class="color-box" style="background-color: #f44336;"></span>
+                <span>Fermeture</span>
             </div>
         </div>
 
