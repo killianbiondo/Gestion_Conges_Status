@@ -26,10 +26,8 @@ class CongeController extends AbstractController
     #[Route('/conge', name: 'conge')]
     public function index(): Response
     {
-        // Utiliser la méthode findAll() pour récupérer tous les congés
         $userConges = $this->congeRepository->findAll();
 
-        // Passer les congés à la vue
         return $this->render('conge/index.html.twig', [
             'userConges' => $userConges,
         ]);
@@ -40,7 +38,6 @@ class CongeController extends AbstractController
     {
         $congeCateType = $this->congeRepository->findCate();
 
-        // Passer les congés à la vue
         return $this->render('conge/show_cate.html.twig', [
             'congesTypes' => $congeCateType,
         ]);
@@ -53,21 +50,19 @@ class CongeController extends AbstractController
             'type' => $type
         ]);
 
-        // Passer les congés à la vue
         return $this->render('conge/show_cate_type.html.twig', [
             'userConges' => $userConges,
         ]);
     }
 
     #[Route('/conge/create', name: 'conge_create')]
-    public function create(Request $request): Response // fonction pour créer un congé
+    public function create(Request $request): Response
     {
         $conge = new Conge();
         $form = $this->createForm(CongeType::class, $conge);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Par défaut, le statut est "En attente"
             $conge->setStatut('En attente');
 
             $this->entityManager->persist($conge);
@@ -85,13 +80,11 @@ class CongeController extends AbstractController
     #[Route('/conge/edit/{id}', name: 'app_conge_edit')]
     public function edit(Request $request, Conge $conge, EntityManagerInterface $entityManager): Response
     {
-        // Vérifier que l'utilisateur connecté est bien le propriétaire de la demande
         if ($conge->getUser() !== $this->getUser()) {
             throw new AccessDeniedException('Vous ne pouvez pas modifier cette demande de congé.');
         }
 
-        // Vérifier si le statut permet la modification (par exemple, si le congé n'est pas déjà validé ou refusé)
-        if ($conge->getStatus() !== 'En attente') {
+        if ($conge->getStatut() !== 'En attente') {
             $this->addFlash('error', 'Vous ne pouvez pas modifier une demande de congé déjà traitée.');
             return $this->redirectToRoute('app_user_dashboard');
         }
@@ -100,7 +93,6 @@ class CongeController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Mettre à jour la date de modification
             $conge->setUpdatedAt(new \DateTimeImmutable());
 
             $entityManager->flush();
@@ -115,5 +107,54 @@ class CongeController extends AbstractController
         ]);
     }
 
+    // ✅ Approuver un congé
+    #[Route('/conge/{id}/approve', name: 'conge_approve')]
+    public function approve(int $id, EntityManagerInterface $em): Response
+    {
+        $conge = $em->getRepository(Conge::class)->find($id);
 
+        if (!$conge) {
+            throw $this->createNotFoundException('Le congé n\'existe pas.');
+        }
+
+        $conge->setStatut('Approuvé');
+        $em->flush();
+
+        $this->addFlash('success', 'Le congé a été approuvé.');
+        return $this->redirectToRoute('conge');
+    }
+
+    // ✅ Refuser un congé
+    #[Route('/conge/{id}/reject', name: 'conge_reject')]
+    public function reject(int $id, EntityManagerInterface $em): Response
+    {
+        $conge = $em->getRepository(Conge::class)->find($id);
+
+        if (!$conge) {
+            throw $this->createNotFoundException('Le congé n\'existe pas.');
+        }
+
+        $conge->setStatut('Refusé');
+        $em->flush();
+
+        $this->addFlash('success', 'Le congé a été refusé.');
+        return $this->redirectToRoute('conge');
+    }
+
+    // ✅ Remettre un congé en attente
+    #[Route('/conge/{id}/pending', name: 'conge_set_pending')]
+    public function setPending(int $id, EntityManagerInterface $em): Response
+    {
+        $conge = $em->getRepository(Conge::class)->find($id);
+
+        if (!$conge) {
+            throw $this->createNotFoundException('Le congé n\'existe pas.');
+        }
+
+        $conge->setStatut('En attente');
+        $em->flush();
+
+        $this->addFlash('success', 'Le congé a été remis en attente.');
+        return $this->redirectToRoute('conge');
+    }
 }

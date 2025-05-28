@@ -89,6 +89,22 @@ class CongeRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findByMonthYearAndStatus(int $month, int $year, string $status): array
+    {
+        $start = new \DateTime("$year-$month-01");
+        $end = new \DateTime("$year-$month-" . date('t', strtotime("$year-$month-01")));
+
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.date_debut <= :end')
+            ->andWhere('c.date_fin >= :start')
+            ->andWhere('c.statut = :status')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->setParameter('status', $status)
+            ->getQuery()
+            ->getResult();
+    }
+
 
 
 }

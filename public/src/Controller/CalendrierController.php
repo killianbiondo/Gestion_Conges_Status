@@ -17,8 +17,10 @@ class CalendrierController extends AbstractController
         $month = $request->query->getInt('month', (int)date('m'));
         $year = $request->query->getInt('year', (int)date('Y'));
 
-        $conges = $congesRepo->findCongesByMonthAndYear($month, $year);
+        // ✅ On ne récupère que les congés approuvés
+        $conges = $congesRepo->findByMonthYearAndStatus($month, $year, 'Approuvé');
 
+        // Récupération des périodes de fermeture
         $fermetures = $periodeFermetureRepo->findFermeturesEntreDates(
             new \DateTime("$year-$month-01"),
             new \DateTime("$year-$month-" . date('t', strtotime("$year-$month-01")))
@@ -26,26 +28,28 @@ class CalendrierController extends AbstractController
 
         $calendarData = [];
 
+        // ✅ Transformation des congés approuvés en événements
         foreach ($conges as $conge) {
             $calendarData[] = [
                 'title' => $conge->getUser()->getFullName(),
                 'start' => $conge->getDateDebut()->format('Y-m-d'),
-                'end' => $conge->getDateFin()->modify('+1 day')->format('Y-m-d'), // ✅ Ajout d'un jour
+                'end' => $conge->getDateFin()->modify('+1 day')->format('Y-m-d'),
                 'backgroundColor' => $this->getLeaveTypeColor($conge->getType()),
                 'description' => 'Congé : ' . $conge->getType(),
                 'type' => 'Congé',
                 'userName' => $conge->getUser()->getFullName(),
                 'leaveType' => $conge->getType(),
-                'status' => $conge->getStatus(),
-                'comment' => $conge->getCommentaire()
+                'status' => $conge->getStatut(),
+                'comment' => $conge->getCommentaire(),
             ];
         }
 
+        // ✅ Transformation des fermetures en événements
         foreach ($fermetures as $fermeture) {
             $calendarData[] = [
                 'title' => $fermeture->getTitre(),
                 'start' => $fermeture->getDateDebut()->format('Y-m-d'),
-                'end' => $fermeture->getDateFin()->modify('+1 day')->format('Y-m-d'), // ✅ Ajout d'un jour
+                'end' => $fermeture->getDateFin()->modify('+1 day')->format('Y-m-d'),
                 'backgroundColor' => '#f44336',
                 'description' => 'Fermeture : ' . $fermeture->getTitre(),
                 'type' => 'Fermeture',
@@ -62,10 +66,10 @@ class CalendrierController extends AbstractController
     private function getLeaveTypeColor(string $type): string
     {
         return match ($type) {
-            'CP' => '#28a745', // Congé payé
-            'CM' => '#dc3545', // Maladie
-            'RTT' => '#6f42c1', // RTT corrigée (mauvaise couleur dans la légende)
-            default => '#007bff',
+            'CP' => '#28a745',    // Vert : Congé payé
+            'CM' => '#dc3545',    // Rouge : Maladie
+            'RTT' => '#6f42c1',   // Violet : RTT
+            default => '#007bff', // Bleu par défaut
         };
     }
 }
