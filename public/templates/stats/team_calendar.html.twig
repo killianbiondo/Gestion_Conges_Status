@@ -6,59 +6,82 @@
     {{ parent() }}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.2/main.min.css">
     <style>
-             #calendar {
-                 max-width: 1200px;
-                 min-height: 700px;
-                 margin: 0 auto;
-                 padding: 20px;
-                 background-color: #ffffff;
-                 border-radius: 10px;
-                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-             }
+        .container {
+            max-width: 100%;
+            padding: 0 20px;
+        }
 
-            .container {
-                max-width: 1400px;
+        #calendar {
+            max-width: 1200px;
+            min-height: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+        }
+
+        .calendar-legend {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        .color-box {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            display: inline-block;
+            border-radius: 3px;
+        }
+
+        .fc-daygrid-event {
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .month-navigation {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tooltip-content {
+            padding: 10px;
+            max-width: 250px;
+        }
+
+        .tooltip-content p {
+            margin: 5px 0;
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 768px) {
+            #calendar {
+                width: 100%;
+                padding: 15px;
+                font-size: 0.85rem;
             }
 
             .calendar-legend {
-                display: flex;
-                justify-content: center;
-                margin-bottom: 20px;
-                flex-wrap: wrap;
-            }
-
-            .legend-item {
-                display: flex;
+                flex-direction: column;
                 align-items: center;
-                margin: 0 10px;
             }
 
-            .color-box {
-                width: 15px;
-                height: 15px;
-                margin-right: 5px;
-                display: inline-block;
+            .month-navigation button {
+                margin-bottom: 10px;
             }
+        }
+    </style>
 
-            .fc-daygrid-event {
-                cursor: pointer;
-            }
-
-            .month-navigation {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-
-            .tooltip-content {
-                padding: 10px;
-                max-width: 250px;
-            }
-
-            .tooltip-content p {
-                margin: 5px 0;
-            }
-        </style>
-    {% endblock %}
+{% endblock %}
 
 
 {% block javascripts %}
@@ -78,11 +101,11 @@
                 initialView: 'dayGridMonth',
                 locale: 'fr',
                 headerToolbar: {
-                    left: 'title',
-                    center: '',
-                    right: 'prev,next today'
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: ''
                 },
-                initialDate: '{{ currentYear }}-{{ '%02d'|format(currentMonth) }}-01',
+                height: 'auto', // important pour adapter à la taille
                 events: calendarData,
                 eventDidMount: function(info) {
                     tippy(info.el, {
@@ -94,6 +117,7 @@
                     });
                 }
             });
+
 
             calendar.render();
 
