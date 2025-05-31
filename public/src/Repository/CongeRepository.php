@@ -38,22 +38,14 @@ class CongeRepository extends ServiceEntityRepository
         return $connection->prepare($sql)->executeQuery()->fetchAllAssociative();
     }
 
-
-
-    /**
-     * Trouve les congés d'une équipe pour une période donnée.
-     */
     public function findTeamLeavesByDateRange(array $teamMembers, \DateTimeInterface $start, \DateTimeInterface $end): array
     {
-        // Vérifier qu'il y a bien des membres dans l'équipe
         if (empty($teamMembers)) {
             return [];
         }
 
-        // Filtrer les utilisateurs valides (non null)
         $teamMembers = array_filter($teamMembers, fn($user) => $user !== null);
 
-        // Si l'équipe est vide après le filtrage, retourner un tableau vide
         if (empty($teamMembers)) {
             return [];
         }
@@ -71,12 +63,6 @@ class CongeRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /**
-     * Trouve les membres du même département qu'un utilisateur (hors lui-même).
-     *
-     * @param User $user L'utilisateur courant
-     * @return User[] Liste des collègues du même département
-     */
     public function findByUserDepartment(User $user): array
     {
         return $this->createQueryBuilder('u')
@@ -89,22 +75,29 @@ class CongeRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Récupère les congés pour un mois/année donné avec un statut spécifique (ex : "Approuvé")
+     */
     public function findByMonthYearAndStatus(int $month, int $year, string $status): array
     {
-        $start = new \DateTime("$year-$month-01");
-        $end = new \DateTime("$year-$month-" . date('t', strtotime("$year-$month-01")));
+        // Protection basique : statut doit être une des valeurs prévues
+        $allowedStatuses = ['Approuvé', 'En attente', 'Refusé'];
+        if (!in_array($status, $allowedStatuses, true)) {
+            throw new \InvalidArgumentException("Statut de congé invalide : $status");
+        }
+
+        $start = new \DateTimeImmutable("$year-$month-01");
+        $end = $start->modify('last day of this month');
 
         return $this->createQueryBuilder('c')
-            ->andWhere('c.date_debut <= :end')
-            ->andWhere('c.date_fin >= :start')
+            ->andWhere('c.dateDebut <= :end')
+            ->andWhere('c.dateFin >= :start')
             ->andWhere('c.statut = :status')
             ->setParameter('start', $start)
             ->setParameter('end', $end)
             ->setParameter('status', $status)
+            ->orderBy('c.dateDebut', 'ASC')
             ->getQuery()
             ->getResult();
     }
-
-
-
 }
