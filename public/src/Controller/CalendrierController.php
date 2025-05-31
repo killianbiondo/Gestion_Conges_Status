@@ -19,6 +19,8 @@ class CalendrierController extends AbstractController
 
         // ✅ On ne récupère que les congés approuvés
         $conges = $congesRepo->findByMonthYearAndStatus($month, $year, 'Approuvé');
+        dump($conges); die();
+
 
         // Récupération des périodes de fermeture
         $fermetures = $periodeFermetureRepo->findFermeturesEntreDates(
