@@ -64,6 +64,3 @@ symfony console doctrine:fixtures:load
 version de Symfony : 7.1.5
 version de PHP : 8.2
 version de MariaDB : 11.5
-
-## Auteur
-[Tom Chaumette](https://github.com/El-Tome)
