@@ -2,103 +2,69 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\Conge;
 use App\Entity\Groupe;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
-use App\Factory\CongeFactory;
-use App\Factory\UserFactory;
+use App\Entity\User;
 use Faker\Factory;
 
 class AppFixtures extends Fixture
 {
-    /**
-     * Charge des données fictives pour la gestion des congés et des groupes.
-     */
     public function load(ObjectManager $manager): void
     {
-        // Crée une instance de Faker pour générer des données fictives
         $faker = Factory::create('fr_FR');
+        $password = password_hash('password', PASSWORD_BCRYPT);
 
-        // Crée des utilisateurs fictifs
-        $users = UserFactory::new()->createMany(10, function () use ($faker) {
-            return [
-                'nom' => $faker->lastName,
-                'prenom' => $faker->firstName,
-                'email' => $faker->unique()->safeEmail,
-                'password' => password_hash('password', PASSWORD_BCRYPT),
-            ];
-        });
+        $groupes = [];
+        foreach (['Administrateurs', 'Employés', 'Managers'] as $nom) {
+            $groupe = new Groupe();
+            $groupe->setNom($nom);
+            $manager->persist($groupe);
+            $groupes[] = $groupe;
+        }
 
-        // Liste des types de congés disponibles
         $typesDeConges = [
             'Congé annuel',
             'Congé maladie',
             'Congé sans solde',
             'Congé maternité/paternité',
             'RTT',
-            'Congé sabbatique'
+            'Congé sabbatique',
         ];
+        $statuts = ['En attente', 'Validé', 'Refusé'];
 
-        // Associe chaque utilisateur à des congés fictifs
-        foreach ($users as $user) {
-            $totalDays = 0; // Total des jours de congé pour cet utilisateur
+        for ($index = 0; $index < 10; ++$index) {
+            $user = new User();
+            $user
+                ->setNom($faker->lastName())
+                ->setPrenom($faker->firstName())
+                ->setEmail($faker->unique()->safeEmail())
+                ->setPassword($password);
 
-            foreach ($typesDeConges as $typeDeConge) {
-                $days = rand(1, 30); // Génère un nombre aléatoire de jours de congé
+            $user->addGroupe($groupes[$index % count($groupes)]);
+            if ($index % 2 === 0) {
+                $user->addGroupe($groupes[2]);
+            }
 
-                // Vérifie que le total des jours ne dépasse pas 30
-                if ($totalDays + $days > 30) {
-                    break; // Arrête d'ajouter des congés si le total dépasse 30 jours
-                }
+            $manager->persist($user);
 
-                // Génère une date de début et calcule la date de fin
-                $dateDebut = new \DateTime(sprintf('-%d days', rand(1, 30)));
-                $dateFin = (clone $dateDebut)->modify(sprintf('+%d days', $days));
+            for ($leaveIndex = 0; $leaveIndex < 3; ++$leaveIndex) {
+                $dateDebut = $faker->dateTimeBetween('-6 months', '+2 months');
+                $dateFin = (clone $dateDebut)->modify(sprintf('+%d days', $faker->numberBetween(1, 10)));
 
-                // Crée un congé fictif
-                CongeFactory::new()->create([
-                    'type' => $typeDeConge,
-                    'dateDebut' => $dateDebut,
-                    'dateFin' => $dateFin,
-                    'statut' => rand(0, 1) ? 'approuvé' : 'en attente',
-                    'user' => $user
-                ]);
+                $conge = new Conge();
+                $conge
+                    ->setType($typesDeConges[($index + $leaveIndex) % count($typesDeConges)])
+                    ->setDateDebut($dateDebut)
+                    ->setDateFin($dateFin)
+                    ->setStatut($statuts[($index + $leaveIndex) % count($statuts)])
+                    ->setUser($user);
 
-                $totalDays += $days; // Ajoute les jours de congé au total
+                $manager->persist($conge);
             }
         }
 
-        // Liste des groupes fictifs
-        $groupes = [
-            'Administrateurs',
-            'Employés',
-            'Managers'
-        ];
-
-        $groupeEntities = [];
-        foreach ($groupes as $groupeNom) {
-            $groupe = new Groupe();
-            $groupe->setNom($groupeNom);
-            $manager->persist($groupe); // Persiste chaque groupe
-            $groupeEntities[] = $groupe; // Stocke les groupes créés
-        }
-
-        // Associe chaque utilisateur à des groupes fictifs
-        foreach ($users as $user) {
-            // Ajoute un ou plusieurs groupes aléatoires à l'utilisateur
-            $randomGroups = array_rand($groupeEntities, rand(1, count($groupeEntities)));
-
-            // Assure que la variable est toujours un tableau
-            if (!is_array($randomGroups)) {
-                $randomGroups = [$randomGroups];
-            }
-
-            foreach ($randomGroups as $groupIndex) {
-                $user->addGroupe($groupeEntities[$groupIndex]);
-            }
-        }
-
-        // Flush les entités persistées dans la base de données
         $manager->flush();
     }
 }

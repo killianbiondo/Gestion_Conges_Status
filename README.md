@@ -31,9 +31,12 @@ docker exec -it php-symfony-gestion_conges_stats bash
 Et exécuter
 ```sh
 composer install
-sudo apt install nodejs npm -y
 npm install
+php bin/console doctrine:migrations:migrate --no-interaction
+php bin/console doctrine:fixtures:load --append --no-interaction
 ```
+
+Le chargement ajoute des données de démonstration (utilisateurs, groupes et demandes de congé) sans effacer les données déjà présentes. Les comptes fictifs utilisent tous le mot de passe `password`.
 
 ## Accéder à l'application
 phpMyAdmin : http://localhost:8080
@@ -57,7 +60,7 @@ docker compose down
 
 - Ajouter un jeu de données :
 ```sh
-symfony console doctrine:fixtures:load
+docker exec -it php-symfony-gestion_conges_stats php bin/console doctrine:fixtures:load --append --no-interaction
 ```
 
 ## Autres informations
